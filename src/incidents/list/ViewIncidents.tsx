@@ -1,8 +1,5 @@
-import { Button, Table } from '@hospitalrun/components'
-import format from 'date-fns/format'
+import { Button } from '@hospitalrun/components'
 import React, { useEffect, useState } from 'react'
-import { useTranslation } from 'react-i18next'
-import { useDispatch, useSelector } from 'react-redux'
 import { useHistory } from 'react-router-dom'
 
 import { useButtonToolbarSetter } from '../../page-header/button-toolbar/ButtonBarProvider'
@@ -10,19 +7,17 @@ import useTitle from '../../page-header/title/useTitle'
 import SelectWithLabelFormGroup, {
   Option,
 } from '../../shared/components/input/SelectWithLableFormGroup'
-import { RootState } from '../../shared/store'
+import useTranslator from '../../shared/hooks/useTranslator'
 import IncidentFilter from '../IncidentFilter'
-import { searchIncidents } from '../incidents-slice'
+import ViewIncidentsTable from './ViewIncidentsTable'
 
 const ViewIncidents = () => {
-  const { t } = useTranslation()
+  const { t } = useTranslator()
   const history = useHistory()
-  const dispatch = useDispatch()
+  const setButtonToolBar = useButtonToolbarSetter()
   useTitle(t('incidents.reports.label'))
   const [searchFilter, setSearchFilter] = useState(IncidentFilter.reported)
-  const { incidents } = useSelector((state: RootState) => state.incidents)
 
-  const setButtonToolBar = useButtonToolbarSetter()
   useEffect(() => {
     setButtonToolBar([
       <Button
@@ -39,11 +34,7 @@ const ViewIncidents = () => {
     return () => {
       setButtonToolBar([])
     }
-  }, [dispatch, setButtonToolBar, t, history])
-
-  useEffect(() => {
-    dispatch(searchIncidents(searchFilter))
-  }, [dispatch, searchFilter])
+  }, [setButtonToolBar, t, history])
 
   const filterOptions: Option[] = Object.values(IncidentFilter).map((filter) => ({
     label: t(`incidents.status.${filter}`),
@@ -65,26 +56,7 @@ const ViewIncidents = () => {
         </div>
       </div>
       <div className="row">
-        <Table
-          getID={(row) => row.id}
-          data={incidents}
-          columns={[
-            { label: t('incidents.reports.code'), key: 'code' },
-            {
-              label: t('incidents.reports.dateOfIncident'),
-              key: 'date',
-              formatter: (row) =>
-                row.date ? format(new Date(row.date), 'yyyy-MM-dd hh:mm a') : '',
-            },
-            { label: t('incidents.reports.reportedBy'), key: 'reportedBy' },
-            { label: t('incidents.reports.reportedOn'), key: 'reportedOn' },
-            { label: t('incidents.reports.status'), key: 'status' },
-          ]}
-          actionsHeaderText={t('actions.label')}
-          actions={[
-            { label: t('actions.view'), action: (row) => history.push(`incidents/${row.id}`) },
-          ]}
-        />
+        <ViewIncidentsTable searchRequest={{ status: searchFilter }} />
       </div>
     </>
   )

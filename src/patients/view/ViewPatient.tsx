@@ -1,6 +1,5 @@
 import { Panel, Spinner, TabsHeader, Tab, Button } from '@hospitalrun/components'
 import React, { useEffect } from 'react'
-import { useTranslation } from 'react-i18next'
 import { useDispatch, useSelector } from 'react-redux'
 import {
   useParams,
@@ -14,6 +13,7 @@ import {
 import useAddBreadcrumbs from '../../page-header/breadcrumbs/useAddBreadcrumbs'
 import { useButtonToolbarSetter } from '../../page-header/button-toolbar/ButtonBarProvider'
 import useTitle from '../../page-header/title/useTitle'
+import useTranslator from '../../shared/hooks/useTranslator'
 import Patient from '../../shared/model/Patient'
 import Permissions from '../../shared/model/Permissions'
 import { RootState } from '../../shared/store'
@@ -27,6 +27,7 @@ import Note from '../notes/NoteTab'
 import { fetchPatient } from '../patient-slice'
 import RelatedPerson from '../related-persons/RelatedPersonTab'
 import { getPatientFullName } from '../util/patient-name-util'
+import VisitTab from '../visits/VisitTab'
 
 const getPatientCode = (p: Patient): string => {
   if (p) {
@@ -37,7 +38,7 @@ const getPatientCode = (p: Patient): string => {
 }
 
 const ViewPatient = () => {
-  const { t } = useTranslation()
+  const { t } = useTranslator()
   const history = useHistory()
   const dispatch = useDispatch()
   const location = useLocation()
@@ -133,6 +134,11 @@ const ViewPatient = () => {
           label={t('patient.carePlan.label')}
           onClick={() => history.push(`/patients/${patient.id}/care-plans`)}
         />
+        <Tab
+          active={location.pathname === `/patients/${patient.id}/visits`}
+          label={t('patient.visits.label')}
+          onClick={() => history.push(`/patients/${patient.id}/visits`)}
+        />
       </TabsHeader>
       <Panel>
         <Route exact path={path}>
@@ -144,7 +150,7 @@ const ViewPatient = () => {
         <Route exact path={`${path}/appointments`}>
           <AppointmentsList patientId={patient.id} />
         </Route>
-        <Route exact path={`${path}/allergies`}>
+        <Route path={`${path}/allergies`}>
           <Allergies patient={patient} />
         </Route>
         <Route exact path={`${path}/diagnoses`}>
@@ -158,6 +164,9 @@ const ViewPatient = () => {
         </Route>
         <Route path={`${path}/care-plans`}>
           <CarePlanTab />
+        </Route>
+        <Route path={`${path}/visits`}>
+          <VisitTab />
         </Route>
       </Panel>
     </div>

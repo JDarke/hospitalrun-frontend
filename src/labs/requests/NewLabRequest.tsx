@@ -1,6 +1,5 @@
-import { Typeahead, Label, Button, Alert } from '@hospitalrun/components'
-import React, { useState } from 'react'
-import { useTranslation } from 'react-i18next'
+import { Typeahead, Label, Button, Alert, Toast } from '@hospitalrun/components'
+import React, { useState, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useHistory } from 'react-router-dom'
 
@@ -9,13 +8,14 @@ import useTitle from '../../page-header/title/useTitle'
 import TextFieldWithLabelFormGroup from '../../shared/components/input/TextFieldWithLabelFormGroup'
 import TextInputWithLabelFormGroup from '../../shared/components/input/TextInputWithLabelFormGroup'
 import PatientRepository from '../../shared/db/PatientRepository'
+import useTranslator from '../../shared/hooks/useTranslator'
 import Lab from '../../shared/model/Lab'
 import Patient from '../../shared/model/Patient'
 import { RootState } from '../../shared/store'
-import { requestLab } from '../lab-slice'
+import { requestLab, resetLab } from '../lab-slice'
 
 const NewLabRequest = () => {
-  const { t } = useTranslation()
+  const { t } = useTranslator()
   const dispatch = useDispatch()
   const history = useHistory()
   useTitle(t('labs.requests.new'))
@@ -27,6 +27,10 @@ const NewLabRequest = () => {
     notes: '',
     status: 'requested',
   })
+
+  useEffect(() => {
+    dispatch(resetLab())
+  }, [dispatch])
 
   const breadcrumbs = [
     {
@@ -40,6 +44,7 @@ const NewLabRequest = () => {
     setNewLabRequest((previousNewLabRequest) => ({
       ...previousNewLabRequest,
       patient: patient.id,
+      fullName: patient.fullName,
     }))
   }
 
@@ -60,12 +65,16 @@ const NewLabRequest = () => {
   }
 
   const onSave = async () => {
-    const newLab = newLabRequest as Lab
-    const onSuccess = (createdLab: Lab) => {
-      history.push(`/labs/${createdLab.id}`)
+    const onSuccessRequest = (newLab: Lab) => {
+      history.push(`/labs/${newLab.id}`)
+      Toast(
+        'success',
+        t('states.success'),
+        `${t('lab.successfullyCreated')} ${newLab.type} ${newLab.patient}`,
+      )
     }
 
-    dispatch(requestLab(newLab, onSuccess))
+    dispatch(requestLab(newLabRequest as Lab, onSuccessRequest))
   }
 
   const onCancel = () => {
@@ -112,8 +121,9 @@ const NewLabRequest = () => {
         <div className="row float-right">
           <div className="btn-group btn-group-lg mt-3">
             <Button className="mr-2" color="success" onClick={onSave}>
-              {t('actions.save')}
+              {t('labs.requests.save')}
             </Button>
+
             <Button color="danger" onClick={onCancel}>
               {t('actions.cancel')}
             </Button>
